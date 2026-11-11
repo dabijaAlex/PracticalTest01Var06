@@ -1,13 +1,18 @@
 package ro.pub.cs.systems.eim.practicaltest01var06
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import kotlin.random.Random
 
 class PracticalTest01Var06MainActivity : AppCompatActivity() {
     private lateinit var play_btn : Button
@@ -24,6 +29,8 @@ class PracticalTest01Var06MainActivity : AppCompatActivity() {
     private var first_edit_val : String = "*"
     private var second_edit_val : String = "*"
     private var third_edit_val : String = "*"
+
+    private var total_score = 0
 
 
 
@@ -50,9 +57,93 @@ class PracticalTest01Var06MainActivity : AppCompatActivity() {
         second_edit = findViewById<EditText>(R.id.second_edit)
         third_edit = findViewById<EditText>(R.id.third_edit)
 
+        random_btn.setOnClickListener {
+            val text_options_list = listOf("1", "2", "3", "*")
+
+            if(!first_hold.isChecked) {
+                val randomIndex1 = Random.nextInt(text_options_list.size);
+                val randomElement1 = text_options_list[randomIndex1]
+                first_edit.setText(randomElement1.toString())
+                first_edit_val = randomElement1.toString()
+            }
+            if(!second_hold.isChecked) {
+                val randomIndex2 = Random.nextInt(text_options_list.size);
+                val randomElement2 = text_options_list[randomIndex2]
+                second_edit.setText(randomElement2.toString())
+                second_edit_val = randomElement2.toString()
+            }
+
+            if(!third_hold.isChecked) {
+                val randomIndex3 = Random.nextInt(text_options_list.size);
+                val randomElement3 = text_options_list[randomIndex3]
+                third_edit.setText(randomElement3.toString())
+                third_edit_val = randomElement3.toString()
+            }
+
+            Log.i("task_b_log", "$first_edit_val $second_edit_val $third_edit_val")
+        }
+
+        val contactsLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == RESULT_OK) {
+                    total_score += result.data!!.getStringExtra("ScoreResult")!!.toInt()
+                    Log.i("task_b_log", "total score is $total_score")
+                    Toast.makeText(
+                        this, "total score is $total_score",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                if (result.resultCode == RESULT_CANCELED) {
+                    Toast.makeText(
+                        this, "CANCELED",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+
+        play_btn.setOnClickListener {
+            var nr_hold = 0
+            if(first_hold.isChecked) {
+                nr_hold++
+            }
+            if(second_hold.isChecked) {
+                nr_hold++
+            }
+            if(third_hold.isChecked) {
+                nr_hold++
+            }
+
+
+            val intent = Intent(this, PracticalTest01Var06SecondaryActivity::class.java).apply {
+                putExtra("TIMES_PRESSED", (nr_hold).toString())
+
+                putExtra("NR_1", (first_edit_val).toString())
+                putExtra("NR_2", (second_edit_val).toString())
+                putExtra("NR_3", (third_edit_val).toString())
+
+            }
+            contactsLauncher.launch(intent)
+        }
 
 
 
+    }
 
+    override fun onSaveInstanceState(savedInstanceState: Bundle) {
+        super.onSaveInstanceState(savedInstanceState)
+        savedInstanceState.putString("SCORE", total_score.toString())
+    }
+
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        savedInstanceState.getString("SCORE")?.let { times ->
+            total_score = times.toInt()
+        }
+
+//        savedInstanceState.getString("SECOND_EDIT")?.let { times ->
+//            second_edit.setText(times)
+//            times_clicked_second = times.toInt()
+//        }
     }
 }
