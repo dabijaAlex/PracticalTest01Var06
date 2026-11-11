@@ -25,6 +25,9 @@
             android:name=".PracticalTest01Var06SecondaryActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
+
+        <service android:name=".PracticalTest01Var06Service" />
+
     </application>
 
 </manifest>

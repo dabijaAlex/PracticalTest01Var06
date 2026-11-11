@@ -1,6 +1,10 @@
 package ro.pub.cs.systems.eim.practicaltest01var06
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
@@ -31,7 +35,6 @@ class PracticalTest01Var06MainActivity : AppCompatActivity() {
     private var third_edit_val : String = "*"
 
     private var total_score = 0
-
 
 
 
@@ -92,6 +95,8 @@ class PracticalTest01Var06MainActivity : AppCompatActivity() {
                         this, "total score is $total_score",
                         Toast.LENGTH_SHORT
                     ).show()
+                    checkAndStartService()
+
                 }
                 if (result.resultCode == RESULT_CANCELED) {
                     Toast.makeText(
@@ -146,4 +151,65 @@ class PracticalTest01Var06MainActivity : AppCompatActivity() {
 //            times_clicked_second = times.toInt()
 //        }
     }
+
+
+    // service with receiver piece
+
+    var serviceStarted = false
+    private val messageBroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Log.d("PracticalTest01Broadcast", intent?.getStringExtra("message") ?: "Empty")
+
+
+
+            // this is used to see which action ran exactly
+//            when (intent?.action) {
+//                "ro.pub.cs.systems.eim.action1" -> Log.d("PracticalTest01Broadcast", "Action 1: $message")
+//                "ro.pub.cs.systems.eim.action2" -> Log.d("PracticalTest01Broadcast", "Action 2: $message")
+//                "ro.pub.cs.systems.eim.action3" -> Log.d("PracticalTest01Broadcast", "Action 3: $message")
+//                else -> Log.d("PracticalTest01Broadcast", "Unknown action: ${intent?.action}")
+//            }
+        }
+    }
+
+    private val intentFilter = IntentFilter().apply {
+        addAction("ro.pub.cs.systems.eim.action1")
+    }
+
+
+
+    private fun checkAndStartService() {
+        if (total_score > 110 && !serviceStarted) {
+            val intent = Intent(this, PracticalTest01Var06Service::class.java)
+            intent.putExtra("first_score", total_score)
+            startService(intent)
+            serviceStarted = true
+        }
+    }
+
+
+
+    // right befor activity becomes interactive
+    override fun onResume() {
+        super.onResume()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(messageBroadcastReceiver, intentFilter, RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(messageBroadcastReceiver, intentFilter)
+        }
+    }
+
+    //It runs as soon as the activity stops being in the foreground:
+    override fun onPause() {
+        unregisterReceiver(messageBroadcastReceiver)
+        super.onPause()
+    }
+
+
+    override fun onDestroy() {
+        stopService(Intent(this, PracticalTest01Var06Service::class.java))
+        super.onDestroy()
+    }
 }
+
+
